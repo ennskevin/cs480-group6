@@ -208,6 +208,8 @@ def collect_and_write_each_pr(owner, repro, token, closed_pr_numbers, merged_pr_
     write_to_json_file(closed_prs, f"{owner}_{repro}_closed_prs.json")
     write_to_json_file(merged_prs, f"{owner}_{repro}_merged_prs.json")
 
+
+
 # enrich each PR datapoint with PR meta data and PR comments data
 def enhance_pr_data(data, owner, repo, token):
    headers = {
@@ -215,6 +217,24 @@ def enhance_pr_data(data, owner, repo, token):
       "Authorization": f"token {token}"
    }
    base_repo_url = f"https://api.github.com/repos/{owner}/{repo}"
+
+   desired_fields = [
+        "author_association",
+        "active_lock_reason",
+        "merged",
+        "mergeable",
+        "rebaseable",
+        "mergeable_state",
+        "commits",
+        "additions",
+        "deletions",
+        "changed_files",
+        "number",
+        "title",
+        "created_at",
+        "closed_at",
+        "merged_at"
+   ]
 
    i = 0
    for pr in data:
@@ -226,13 +246,13 @@ def enhance_pr_data(data, owner, repo, token):
       # general pr data
       pr_details_response = requests.get(pr_url, headers=headers)
       if pr_details_response.status_code == 200:
-         pr_details = pr_details_response.json()
-         pr["additions"] = pr_details.get("additions", 0)
-         pr["deletions"] = pr_details.get("deletions", 0)
-         pr["changed_files"] = pr_details.get("changed_files", 0)
+            pr_details = pr_details_response.json()
+            for field in desired_fields:
+                pr[field] = pr_details.get(field, 0)
       else:
-         print(f"Failed to fetch PR details for pr #{pr_number}")
-         pr["additions"] = pr["deletions"] = pr["changed_files"] = None
+            print(f"Failed to fetch PR details for pr #{pr_number}")
+            for field in desired_fields:
+                pr[field] = None
 
       # from pulls/
       pulls_comments_response = requests.get(pulls_comments_url, headers=headers)
@@ -274,9 +294,9 @@ def enhance_pr_data(data, owner, repo, token):
       remaining_prs = len(data) - i
       print(pr)
       print(f"PR #{pr_number} enhanced, {remaining_prs} prs to go")
-
       time.sleep(1.5)
-    
+
+
 def get_lifespan_histogram(data):
     delta_times = []
     for pr in data:
