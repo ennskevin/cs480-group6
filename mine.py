@@ -304,7 +304,7 @@ def enhance_pr_data(data, owner, repo, token):
       i += 1
       remaining_prs = len(data) - i
       print(pr)
-      print(f"PR #{pr_number} enhanced, {remaining_prs} prs to go")
+      print(f"PR #{pr_number} enhanced, {remaining_prs} prs to go...")
       time.sleep(1.5)
 
 
