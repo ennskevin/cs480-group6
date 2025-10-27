@@ -148,7 +148,7 @@ def get_long_lived_prs_without_separating(data, percentile_value):
       closed_at = pr["closed_at"]
       delta = calculate_time_delta(created_at, closed_at)
       if delta > percentile_value:
-         pr["delta"] = delta
+         pr["lifespan_minutes"] = delta
          long_lived_prs.append(pr)
    return long_lived_prs
 
@@ -331,9 +331,9 @@ def get_lifespan_histogram(data):
     # 📊 Plot histogram and overlay normal curve
     plt.hist(values, bins=30, density=True, alpha=0.6, color='skyblue', edgecolor='black', label="Data")
     # plt.plot(x, normal_curve, 'r--', label="Normal Distribution (same mean/std)")
-    plt.title("Distribution of delta_times")
-    plt.xlabel("Delta")
-    plt.ylabel("Density")
+    plt.title("Distribution of Pull Request Lifespans")
+    plt.xlabel("Lifespan (minutes)")
+    plt.ylabel("Frequency")
     plt.legend()
     plt.show()
 
