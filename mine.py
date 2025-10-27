@@ -341,7 +341,7 @@ def get_lifespan_histogram(data):
 
 owner = "zephyrproject-rtos"
 repro = "zephyr"
-token = "token"
+token = ""
 # collect_and_write(token)
 data = read_json_file("zephyrproject-rtos.json")
 median_time_delta = get_median_time_delta(data)
