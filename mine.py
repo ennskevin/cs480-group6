@@ -341,17 +341,18 @@ def get_lifespan_histogram(data):
 
 owner = "zephyrproject-rtos"
 repro = "zephyr"
-token = "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"
+token = "token"
 # collect_and_write(token)
 data = read_json_file("zephyrproject-rtos.json")
 median_time_delta = get_median_time_delta(data)
 percentile_value = get_percentile_time_delta(data, 85)
 data = get_long_lived_prs_without_separating(data, percentile_value)
 enhance_pr_data(data, owner, repro, token)
+write_to_json_file(data, "longlived_zehpyr_prs.json")
 # make_histogram(data, median_time_delta)
 # closed_pr_numbers, merged_pr_numbers = get_long_lived_prs(data, median_time_delta)
 
-collect_and_write_each_pr(owner, repro, token, closed_pr_numbers, merged_pr_numbers)
+# collect_and_write_each_pr(owner, repro, token, closed_pr_numbers, merged_pr_numbers)
 # print(len(closed_pr_numbers))
 # print(len(merged_pr_numbers))
 # print(merged_pr_numbers[44])
