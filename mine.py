@@ -220,6 +220,27 @@ def collect_and_write_each_pr(owner, repro, token, closed_pr_numbers, merged_pr_
     write_to_json_file(merged_prs, f"{owner}_{repro}_merged_prs.json")
 
 
+def safe_get(url, headers=None, retries=8, backoff=2):
+    """Safely perform GET requests with retries and graceful failure."""
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            return response
+        except requests.exceptions.RequestException as e:
+            print(f"Connection error on {url}: {e}")
+            if attempt < retries - 1:
+                wait_time = backoff * (attempt + 1)
+                print(f"Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                print("Giving up on this request.")
+                # Create a dummy response-like object
+                class DummyResponse:
+                    status_code = 0
+                    def json(self):
+                        return {}
+                return DummyResponse()
+            
 
 # enrich each PR datapoint with PR meta data and PR comments data
 def enhance_pr_data(data, owner, repo, token):
@@ -236,6 +257,7 @@ def enhance_pr_data(data, owner, repo, token):
         "mergeable",
         "rebaseable",
         "mergeable_state",
+        "comments",
         "commits",
         "additions",
         "deletions",
@@ -255,7 +277,7 @@ def enhance_pr_data(data, owner, repo, token):
       issues_comments_url = f"{base_repo_url}/issues/{pr_number}/comments"
 
       # general pr data
-      pr_details_response = requests.get(pr_url, headers=headers)
+      pr_details_response = safe_get(pr_url, headers)
       if pr_details_response.status_code == 200:
             pr_details = pr_details_response.json()
             for field in desired_fields:
@@ -266,7 +288,7 @@ def enhance_pr_data(data, owner, repo, token):
                 pr[field] = None
 
       # from pulls/
-      pulls_comments_response = requests.get(pulls_comments_url, headers=headers)
+      pulls_comments_response = safe_get(pulls_comments_url, headers)
       if pulls_comments_response.status_code == 200:
          pulls_comments = pulls_comments_response.json()
       else:
@@ -279,7 +301,7 @@ def enhance_pr_data(data, owner, repo, token):
       pr["user_review_comments"] = len(user_pulls_comments)
 
       # from issues/
-      issues_comments_response = requests.get(issues_comments_url, headers=headers)
+      issues_comments_response = safe_get(issues_comments_url, headers)
       if issues_comments_response.status_code == 200:
          issues_comments = issues_comments_response.json()
       else:
@@ -306,6 +328,7 @@ def enhance_pr_data(data, owner, repo, token):
       print(pr)
       print(f"PR #{pr_number} enhanced, {remaining_prs} prs to go...")
       time.sleep(1.5)
+
 
 
 def get_lifespan_histogram(data):
