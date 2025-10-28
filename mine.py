@@ -339,16 +339,64 @@ def get_lifespan_histogram(data):
 
     print(f"Mean: {mean:.3f}, Std Dev: {std:.3f}")  
 
+
+def get_first_x_of_data(x, file):
+    data = read_json_file(file)
+    return  data[:x]
+
+
+def analyze_data(file):
+    data = read_json_file(file)
+
+    merged = [pr for pr in data if pr["merged"]]
+    closed = [pr for pr in data if pr["closed_at"] is not None and not pr["merged"]]
+
+    avg_merged = _compute_avg(merged)
+    avg_closed = _compute_avg(closed)
+
+    results = {
+        "Average metrics for merged PRs": avg_merged,
+        "Average metrics for closed PRs": avg_closed
+    }
+
+    # Write results to JSON file
+    with open("averages.json", "w") as out_file:
+        json.dump(results, out_file, indent=4)
+
+    return results
+
+def _compute_avg(records):
+        
+    numeric_fields = [
+        "commits",
+        "additions",
+        "deletions",
+        "changed_files",
+        "user_review_comments",
+        "user_conversation_comments",
+        "total_user_comments",
+        "unique_user_commenters"
+    ]
+    
+    averages = {}
+    for field in numeric_fields:
+        values = [r[field] for r in records if field in r]
+        averages[field] = sum(values) / len(values) if values else 0
+    return averages
+
+
 owner = "zephyrproject-rtos"
 repro = "zephyr"
 token = ""
 # collect_and_write(token)
 data = read_json_file("zephyrproject-rtos.json")
+# data = get_first_x_of_data(500, owner + ".json")
 median_time_delta = get_median_time_delta(data)
 percentile_value = get_percentile_time_delta(data, 85)
 data = get_long_lived_prs_without_separating(data, percentile_value)
 enhance_pr_data(data, owner, repro, token)
 write_to_json_file(data, "longlived_zehpyr_prs.json")
+analyze_data("longlived_zehpyr_prs.json")
 # make_histogram(data, median_time_delta)
 # closed_pr_numbers, merged_pr_numbers = get_long_lived_prs(data, median_time_delta)
 
