@@ -1,0 +1,22 @@
+{
+    "Average metrics for merged PRs": {
+        "comments": 0,
+        "additions": 81.5925925925926,
+        "deletions": 20.62962962962963,
+        "changed_files": 3.4814814814814814,
+        "user_review_comments": 1.1481481481481481,
+        "user_conversation_comments": 8.666666666666666,
+        "total_user_comments": 9.814814814814815,
+        "unique_user_commenters": 2.888888888888889
+    },
+    "Average metrics for closed PRs": {
+        "comments": 0,
+        "additions": 263.37856388595566,
+        "deletions": 176.41921858500527,
+        "changed_files": 12.488912354804647,
+        "user_review_comments": 2.7275607180570223,
+        "user_conversation_comments": 6.374340021119324,
+        "total_user_comments": 9.101900739176346,
+        "unique_user_commenters": 2.6335797254487856
+    }
+}
