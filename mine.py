@@ -1,4 +1,5 @@
 import csv
+import os
 import requests
 import json
 from datetime import datetime
@@ -367,7 +368,6 @@ def get_first_x_of_data(x, file):
     data = read_json_file(file)
     return  data[:x]
 
-
 def analyze_data(file):
     data = read_json_file(file)
 
@@ -449,6 +449,144 @@ def _get_factors (avg_merged, avg_closed):
 
     return factors
 
+
+def read_all_repos():
+    repo_files = {
+        "zephyr": "longlived_zehpyr_analysis.json",
+        "curl": "longlived_curl_analysis.json",
+        "facebook_react": "longlived_facebook_react_analysis.json",
+        "ohmyzhs": "longlived_ohmyzsh_analysis.json",
+        "twbs_boostrap": "longlived_twbs_bootstrap_analysis.json",
+        "vuejs": "longlived_vuejs_analysis.json"
+    }
+
+    repo_analytics = []
+
+    for repo_name, file_name in repo_files.items():
+        if not os.path.exists(file_name):
+            print(f"Warning: file not found {file_name}")
+            continue
+         
+        data = read_json_file(file_name)
+
+        repo_analytics.append({
+            "repo": repo_name,
+            "overview": data["Overview"],
+            "merged_avg": data["Average metrics for merged PRs"],
+            "closed_avg": data["Average metrics for closed PRs"],
+            "factors": data["Factors (closed -> merged)"][0]
+        })
+
+    return repo_analytics
+
+
+def write_overview_csv(repo_analytics, filename="overview.csv"):
+    metrics = [
+        "merged_count",
+        "closed_count",
+        "total",
+        "merged_percent",
+        "closed_percent"
+    ]
+
+    header = ["metric"] + [repo["repo"] for repo in repo_analytics]
+
+    rows = []
+
+    for metric in metrics:
+        row = {"metric": metric}
+        for repo in repo_analytics:
+            name = repo["repo"]
+            row[name] = repo["overview"][metric]
+        rows.append(row)
+        
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"✅ Wrote overview to {filename}")
+
+   
+def write_detailed_merged_csv(repo_analytics, filename="detailed_merged.csv"):
+    
+    metrics = list(repo_analytics[0]["merged_avg"].keys())
+
+    header = ["metric"]
+    for repo in repo_analytics:
+        name = repo["repo"]
+        header.extend([f"{name}"])
+
+    rows = []
+
+    for metric in metrics:
+        row = {"metric": metric}
+        for repo in repo_analytics:
+            name = repo["repo"]
+            row[f"{name}"] = repo["merged_avg"][metric]
+        rows.append(row)
+
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"Wrote detailed comparison to {filename}")
+
+
+def write_detailed_closed_csv(repo_analytics, filename="detailed_closed.csv"):
+    
+    metrics = list(repo_analytics[0]["closed_avg"].keys())
+
+    header = ["metric"]
+    for repo in repo_analytics:
+        name = repo["repo"]
+        header.extend([f"{name}"])
+
+    rows = []
+
+    for metric in metrics:
+        row = {"metric": metric}
+        for repo in repo_analytics:
+            name = repo["repo"]
+            row[f"{name}"] = repo["closed_avg"][metric]
+        rows.append(row)
+
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"Wrote detailed comparison to {filename}")
+
+
+
+def write_detailed_factor_csv(repo_analytics, filename="detailed_factors.csv"):
+    
+    metrics = list(repo_analytics[0]["merged_avg"].keys())
+
+    header = ["metric"]
+    for repo in repo_analytics:
+        name = repo["repo"]
+        header.extend([f"{name}"])
+
+    rows = []
+
+    for metric in metrics:
+        row = {"metric": metric}
+        for repo in repo_analytics:
+            name = repo["repo"]
+            row[f"{name}"] = repo["factors"][metric]
+        rows.append(row)
+
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"Wrote detailed comparison to {filename}")
+
+
 owner = "zephyrproject-rtos"
 repro = "zephyr"
 token = ""
@@ -460,7 +598,15 @@ token = ""
 #data = get_long_lived_prs_without_separating(data, percentile_value)
 #enhance_pr_data(data, owner, repro, token)
 #write_to_json_file(data, "longlived_zehpyr_prs.json")
-analyze_data("longlived_vuejs.json")
+#analyze_data("longlived_vuejs.json")
+
+repo_analytics = read_all_repos()
+write_overview_csv(repo_analytics)
+#write_detailed_merged_csv(repo_analytics)
+#write_detailed_closed_csv(repo_analytics)
+#write_detailed_factor_csv(repo_analytics)
+
+
 # make_histogram(data, median_time_delta)
 # closed_pr_numbers, merged_pr_numbers = get_long_lived_prs(data, median_time_delta)
 
