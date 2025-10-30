@@ -1,0 +1,9 @@
+metric,zephyr,curl,facebook_react,ohmyzhs,twbs_boostrap,vuejs
+commits,3.41,1.41,4.35,2.32,4.47,8.82
+additions,1023.07,81.59,237.18,36.55,266.83,251.87
+deletions,118.19,20.63,102.16,5.95,200.9,66.02
+changed_files,13.84,3.48,7.82,1.43,9.9,5.49
+user_review_comments,11.87,1.15,4.85,0.49,2.65,1.39
+user_conversation_comments,7.07,8.67,6.95,2.73,5.66,2.47
+total_user_comments,18.94,9.81,11.81,3.23,8.31,3.86
+unique_user_commenters,3.87,2.89,3.59,1.69,2.76,1.92
