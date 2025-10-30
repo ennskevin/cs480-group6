@@ -393,6 +393,8 @@ def analyze_data(file):
     with open(analysis_file, "w") as out_file:
         json.dump(results, out_file, indent=4)
 
+    print ("writintg to" + analysis_file)
+
     return results
 
 def _get_overview (data, merged, closed):
@@ -401,8 +403,8 @@ def _get_overview (data, merged, closed):
     closed_count = len(closed)
     total = len(data)
 
-    merged_percent = (merged_count / total) * 100
-    closed_percent = (merged_count / total) * 100
+    merged_percent = round((merged_count / total) * 100, 2)
+    closed_percent = round((closed_count / total) * 100, 2)
    
     overview = {}
     overview["merged_count"] = merged_count
@@ -429,7 +431,7 @@ def _compute_avg(records):
     averages = {}
     for field in numeric_fields:
         values = [r[field] for r in records if field in r]
-        averages[field] = sum(values) / len(values) if values else 0
+        averages[field] = round(sum(values) / len(values) if values else 0, 2)
     
     return averages
 
@@ -443,7 +445,7 @@ def _get_factors (avg_merged, avg_closed):
         if merged_val == 0:
             factors[field] = None  
         else:
-            factors[field] = closed_val / merged_val # will read as closed has x times more than merged
+            factors[field] = round(closed_val / merged_val, 2) # will read as closed has x times more than merged
 
     return factors
 
@@ -458,7 +460,7 @@ token = ""
 #data = get_long_lived_prs_without_separating(data, percentile_value)
 #enhance_pr_data(data, owner, repro, token)
 #write_to_json_file(data, "longlived_zehpyr_prs.json")
-analyze_data("longlived_zehpyr.json")
+analyze_data("longlived_vuejs.json")
 # make_histogram(data, median_time_delta)
 # closed_pr_numbers, merged_pr_numbers = get_long_lived_prs(data, median_time_delta)
 
