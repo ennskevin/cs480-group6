@@ -374,20 +374,47 @@ def analyze_data(file):
     merged = [pr for pr in data if pr["merged"]]
     closed = [pr for pr in data if pr["closed_at"] is not None and not pr["merged"]]
 
+    overview = _get_overview(data, merged, closed)
+
     avg_merged = _compute_avg(merged)
     avg_closed = _compute_avg(closed)
 
+    factors = _get_factors(avg_merged, avg_closed),
+
     results = {
+        "Overview" : overview,
         "Average metrics for merged PRs": avg_merged,
-        "Average metrics for closed PRs": avg_closed
+        "Average metrics for closed PRs": avg_closed,
+        "Factors (closed -> merged)" : factors
     }
 
-    # Write results to JSON file
-    with open("averages.json", "w") as out_file:
+    analysis_file = file.replace(".json", "_analysis.json")
+
+    with open(analysis_file, "w") as out_file:
         json.dump(results, out_file, indent=4)
+
+    print ("writintg to" + analysis_file)
 
     return results
 
+def _get_overview (data, merged, closed):
+    
+    merged_count = len(merged)
+    closed_count = len(closed)
+    total = len(data)
+
+    merged_percent = round((merged_count / total) * 100, 2)
+    closed_percent = round((closed_count / total) * 100, 2)
+   
+    overview = {}
+    overview["merged_count"] = merged_count
+    overview["closed_count"] = closed_count
+    overview["total"] = total
+    overview["merged_percent"] = merged_percent
+    overview["closed_percent"] = closed_percent
+
+    return overview
+    
 def _compute_avg(records):
         
     numeric_fields = [
@@ -400,26 +427,40 @@ def _compute_avg(records):
         "total_user_comments",
         "unique_user_commenters"
     ]
-    
+
     averages = {}
     for field in numeric_fields:
         values = [r[field] for r in records if field in r]
-        averages[field] = sum(values) / len(values) if values else 0
+        averages[field] = round(sum(values) / len(values) if values else 0, 2)
+    
     return averages
 
+def _get_factors (avg_merged, avg_closed):
+
+    factors = {}
+    for field in avg_merged:
+        merged_val = avg_merged[field]
+        closed_val = avg_closed[field]
+
+        if merged_val == 0:
+            factors[field] = None  
+        else:
+            factors[field] = round(closed_val / merged_val, 2) # will read as closed has x times more than merged
+
+    return factors
 
 owner = "zephyrproject-rtos"
 repro = "zephyr"
 token = ""
 # collect_and_write(token)
-data = read_json_file("zephyrproject-rtos.json")
-# data = get_first_x_of_data(500, owner + ".json")
-median_time_delta = get_median_time_delta(data)
-percentile_value = get_percentile_time_delta(data, 85)
-data = get_long_lived_prs_without_separating(data, percentile_value)
-enhance_pr_data(data, owner, repro, token)
-write_to_json_file(data, "longlived_zehpyr_prs.json")
-analyze_data("longlived_zehpyr_prs.json")
+#data = read_json_file("zephyrproject-rtos.json")
+#data = get_first_x_of_data(500, owner + ".json")
+#median_time_delta = get_median_time_delta(data)
+#percentile_value = get_percentile_time_delta(data, 85)
+#data = get_long_lived_prs_without_separating(data, percentile_value)
+#enhance_pr_data(data, owner, repro, token)
+#write_to_json_file(data, "longlived_zehpyr_prs.json")
+analyze_data("longlived_vuejs.json")
 # make_histogram(data, median_time_delta)
 # closed_pr_numbers, merged_pr_numbers = get_long_lived_prs(data, median_time_delta)
 
