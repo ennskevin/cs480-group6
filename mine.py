@@ -610,8 +610,8 @@ for owner in files_names.keys():
     percentile_value = get_percentile_time_delta(data, 50)
     data = get_long_lived_prs_without_separating(data, percentile_value)
     enhance_pr_data(data, owner, repo, token)
-    write_to_json_file(data, "longlived_"+ owner + "_" + repo + "_.json")
-    analyze_data("longlived_"+ owner + "_" + repo + "_.json")
+    write_to_json_file(data, "longlived_"+ owner + "_" + repo + ".json")
+    analyze_data("longlived_"+ owner + "_" + repo + "_analysis.json")
     
 # collect_and_write(token)
 #data = read_json_file("zephyrproject-rtos.json")
