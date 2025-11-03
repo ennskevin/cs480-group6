@@ -592,9 +592,27 @@ def write_detailed_factor_csv(repo_analytics, filename="detailed_factors.csv"):
     print(f"Wrote detailed comparison to {filename}")
 
 
-owner = "zephyrproject-rtos"
-repo = "zephyr"
+# owner = "zephyrproject-rtos"
+# repo = "zephyr"
 token = ""
+files_names = {
+    "curl": "curl",
+    "zephyrproject-rtos": "zephyr",
+    "vuejs": "core",
+    "facebook":"react",
+    "ohmyzsh": "ohmyzsh",
+    "twbs": "bootstrap",
+}
+
+for owner in files_names.keys():
+    repo = files_names[owner]
+    data = read_json_file(owner + ".json")
+    percentile_value = get_percentile_time_delta(data, 50)
+    data = get_long_lived_prs_without_separating(data, percentile_value)
+    enhance_pr_data(data, owner, repo, token)
+    write_to_json_file(data, "longlived_"+ owner + "_" + repo + "_.json")
+    analyze_data("longlived_"+ owner + "_" + repo + "_.json")
+    
 # collect_and_write(token)
 #data = read_json_file("zephyrproject-rtos.json")
 #data = get_first_x_of_data(500, owner + ".json")
