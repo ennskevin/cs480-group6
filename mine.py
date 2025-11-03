@@ -11,24 +11,26 @@ import time
 
 
 def get_github_pull_requests(owner, repo, token, page=1, number=None):
-   try:
-       url = f"https://api.github.com/repos/{owner}/{repo}/pulls"
-       if number:
-           url += f"/{number}"
-       headers = {
-           "Authorization": f"token {token}",
-           "Accept": "application/vnd.github.v3+json"
-       }
-       params = {
-           "state": "closed",
-           "page": page,
-           "per_page": 100
-       }
-       response = requests.get(url, headers=headers, params=params)
-       response.raise_for_status()  # Raise an exception for bad status codes
-       return response.json()
-   except requests.RequestException:
-       return get_github_pull_requests(owner, repo, token, page, number)
+    try:
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls"
+        if number:
+            url += f"/{number}"
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        params = {
+            "state": "closed",
+            "page": page,
+            "per_page": 100
+        }
+        response = requests.get(url, headers=headers, params=params)
+        response_headers = response.headers
+        if response_headers["x-ratelimit-remaining"] == 0:
+            time.sleep(response_headers["x-ratelimit-reset"])
+        return response.json()
+    except requests.RequestException:
+        return get_github_pull_requests(owner, repo, token, page, number)
 
 
 def get_all_pages(owner, repo, token):
@@ -226,11 +228,14 @@ def safe_get(url, headers=None, retries=8, backoff=2):
     for attempt in range(retries):
         try:
             response = requests.get(url, headers=headers, timeout=10)
+            response_headers = response.headers
+            if response_headers["x-ratelimit-remaining"] == 0:
+                time.sleep(response_headers["x-ratelimit-reset"])
             return response
         except requests.exceptions.RequestException as e:
             print(f"Connection error on {url}: {e}")
             if attempt < retries - 1:
-                wait_time = backoff * (attempt + 1)
+                wait_time = backoff * (attempt)
                 print(f"Retrying in {wait_time}s...")
                 time.sleep(wait_time)
             else:
@@ -588,7 +593,7 @@ def write_detailed_factor_csv(repo_analytics, filename="detailed_factors.csv"):
 
 
 owner = "zephyrproject-rtos"
-repro = "zephyr"
+repo = "zephyr"
 token = ""
 # collect_and_write(token)
 #data = read_json_file("zephyrproject-rtos.json")
