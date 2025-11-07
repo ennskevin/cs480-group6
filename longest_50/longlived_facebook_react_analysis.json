@@ -1,0 +1,41 @@
+{
+    "Overview": {
+        "merged_count": 5373,
+        "closed_count": 3763,
+        "total": 9136,
+        "merged_percent": 58.81,
+        "closed_percent": 41.19
+    },
+    "Average metrics for merged PRs": {
+        "commits": 3.54,
+        "additions": 277.2,
+        "deletions": 140.11,
+        "changed_files": 8.74,
+        "user_review_comments": 3.39,
+        "user_conversation_comments": 3.68,
+        "total_user_comments": 7.07,
+        "unique_user_commenters": 2.55
+    },
+    "Average metrics for closed PRs": {
+        "commits": 8.08,
+        "additions": 645.41,
+        "deletions": 412.3,
+        "changed_files": 10.66,
+        "user_review_comments": 1.41,
+        "user_conversation_comments": 4.1,
+        "total_user_comments": 5.51,
+        "unique_user_commenters": 2.62
+    },
+    "Factors (closed -> merged)": [
+        {
+            "commits": 2.28,
+            "additions": 2.33,
+            "deletions": 2.94,
+            "changed_files": 1.22,
+            "user_review_comments": 0.42,
+            "user_conversation_comments": 1.11,
+            "total_user_comments": 0.78,
+            "unique_user_commenters": 1.03
+        }
+    ]
+}

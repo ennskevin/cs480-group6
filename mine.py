@@ -229,8 +229,9 @@ def safe_get(url, headers=None, retries=8, backoff=2):
         try:
             response = requests.get(url, headers=headers, timeout=10)
             response_headers = response.headers
-            if response_headers["x-ratelimit-remaining"] == 0:
-                time.sleep(response_headers["x-ratelimit-reset"])
+            if int(response_headers["X-Ratelimit-Remaining"]) == 0:
+                time.sleep(max(int(response_headers["X-Ratelimit-Reset"]) - time.time(), 0))
+                continue
             return response
         except requests.exceptions.RequestException as e:
             print(f"Connection error on {url}: {e}")
@@ -333,8 +334,19 @@ def enhance_pr_data(data, owner, repo, token):
       remaining_prs = len(data) - i
       print(pr)
       print(f"PR #{pr_number} enhanced, {remaining_prs} prs to go...")
-      time.sleep(1.5)
+    #   time.sleep(1.5)
 
+
+def stratify_merge_status(data):
+    merged = []
+    unmerged = []
+    for pr in data:
+        status = pr["merged"]
+        if status == True:
+            merged.append(pr)
+        else:
+            unmerged.append(pr)
+    return merged, unmerged
 
 
 def get_lifespan_histogram(data):
@@ -367,6 +379,78 @@ def get_lifespan_histogram(data):
     plt.show()
 
     print(f"Mean: {mean:.3f}, Std Dev: {std:.3f}")  
+
+def get_field_histogram(data, field):
+    field_values = []
+    for pr in data:
+        value = pr[field]
+        if value is None:
+            continue
+        field_values.append(value)
+    
+    raw_values = np.array(field_values, dtype=float)
+    upper = np.percentile(raw_values, 100)
+    lower = np.percentile(raw_values, 0)
+    values = raw_values[(raw_values <= upper) & (raw_values >= lower)]
+
+    weights = np.ones_like(values) / len(values)
+
+    plt.hist(values, bins=15, weights=weights, alpha=0.6, color='skyblue', edgecolor='black', label="Data")
+    plt.title(f"Distribution of Pull Request {field}")
+    plt.xlabel(field)
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.show()
+    
+
+def get_field_histogram_by_merge_status(data, field):
+    # Split data
+    merged, unmerged = stratify_merge_status(data)
+
+    merged_vals = [pr[field] for pr in merged if pr[field] is not None]
+    unmerged_vals = [pr[field] for pr in unmerged if pr[field] is not None]
+
+    merged_arr = np.array(merged_vals, dtype=float)
+    unmerged_arr = np.array(unmerged_vals, dtype=float)
+
+    upper = np.percentile(np.concatenate([merged_arr, unmerged_arr]), 100)
+    lower = np.percentile(np.concatenate([merged_arr, unmerged_arr]), 0)
+
+    merged_arr = merged_arr[(merged_arr >= lower) & (merged_arr <= upper)]
+    unmerged_arr = unmerged_arr[(unmerged_arr >= lower) & (unmerged_arr <= upper)]
+
+    merged_weights = np.ones_like(merged_arr) / len(merged_arr) if len(merged_arr) > 0 else None
+    unmerged_weights = np.ones_like(unmerged_arr) / len(unmerged_arr) if len(unmerged_arr) > 0 else None
+
+    # Plot
+    bins = 15
+
+    plt.hist(
+        merged_arr,
+        bins=bins,
+        weights=merged_weights,
+        alpha=0.6,
+        color='skyblue',
+        edgecolor='black',
+        label='Merged'
+    )
+
+    plt.hist(
+        unmerged_arr,
+        bins=bins,
+        weights=unmerged_weights,
+        alpha=0.4,
+        color='salmon',
+        edgecolor='black',
+        label='Unmerged'
+    )
+
+    plt.title(f"Distribution of Pull Request {field}")
+    plt.xlabel(field)
+    plt.ylabel("Proportion")
+    plt.legend()
+    plt.show()
+
 
 
 def get_first_x_of_data(x, file):
@@ -592,27 +676,42 @@ def write_detailed_factor_csv(repo_analytics, filename="detailed_factors.csv"):
     print(f"Wrote detailed comparison to {filename}")
 
 
-# owner = "zephyrproject-rtos"
-# repo = "zephyr"
-token = ""
+
 files_names = {
     "curl": "curl",
     "zephyrproject-rtos": "zephyr",
     "vuejs": "core",
     "facebook":"react",
     "ohmyzsh": "ohmyzsh",
-    "twbs": "bootstrap",
+    "twbs": "bootstrap"
 }
 
+# MINING
+# for owner in files_names.keys():
+#     token = ""
+#     repo = files_names[owner]
+#     data = read_json_file(owner + ".json")
+#     percentile_value = get_percentile_time_delta(data, 50)
+#     data = get_long_lived_prs_without_separating(data, percentile_value)
+#     enhance_pr_data(data, owner, repo, token)
+#     write_to_json_file(data, "longlived_"+ owner + "_" + repo + ".json")
+    
+# HISTOGRAMS Individual fields
 for owner in files_names.keys():
     repo = files_names[owner]
-    data = read_json_file(owner + ".json")
-    percentile_value = get_percentile_time_delta(data, 50)
-    data = get_long_lived_prs_without_separating(data, percentile_value)
-    enhance_pr_data(data, owner, repo, token)
-    write_to_json_file(data, "longlived_"+ owner + "_" + repo + ".json")
-    analyze_data("longlived_"+ owner + "_" + repo + "_analysis.json")
-    
+    folder = "longest_15"
+    longlived_data = read_json_file(f"{folder}/longlived_{owner}_{repo}.json")
+    field = "total_user_comments"
+    get_field_histogram(longlived_data, field)
+    get_field_histogram_by_merge_status(longlived_data, field)
+
+# ANALYSIS
+# for owner in files_names.keys():
+#     analyze_data("longlived_"+ owner + "_" + repo + ".json")
+
+
+
+
 # collect_and_write(token)
 #data = read_json_file("zephyrproject-rtos.json")
 #data = get_first_x_of_data(500, owner + ".json")
@@ -623,8 +722,8 @@ for owner in files_names.keys():
 #write_to_json_file(data, "longlived_zehpyr_prs.json")
 #analyze_data("longlived_vuejs.json")
 
-repo_analytics = read_all_repos()
-write_overview_csv(repo_analytics)
+# repo_analytics = read_all_repos()
+# write_overview_csv(repo_analytics)
 #write_detailed_merged_csv(repo_analytics)
 #write_detailed_closed_csv(repo_analytics)
 #write_detailed_factor_csv(repo_analytics)
