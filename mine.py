@@ -119,6 +119,8 @@ def get_median_time_delta(data):
 def get_percentile_time_delta(data, percentile):
    time_delta = []
    for pr in data:
+       if pr["created_at"] is None or pr["closed_at"] is None:
+           continue
        created_at = pr["created_at"]
        closed_at = pr["closed_at"]
        delta = calculate_time_delta(created_at, closed_at)
@@ -347,6 +349,32 @@ def stratify_merge_status(data):
         else:
             unmerged.append(pr)
     return merged, unmerged
+
+def stratify_lifespans(data, field="lifespan_minutes"):
+    strata = {
+        "50-60": [],
+        "60-70": [],
+        "70-80": [],
+        "80-90": [],
+        "90-100": []
+    }
+    p20 = get_percentile_time_delta(data, 20)
+    p40 = get_percentile_time_delta(data, 40)
+    p60 = get_percentile_time_delta(data, 60)
+    p80 = get_percentile_time_delta(data, 80)
+    for pr in data:
+        value = pr[field]
+        if value <= p20:
+            strata["50-60"].append(pr)
+        elif value <= p40:
+            strata["60-70"].append(pr)
+        elif value <= p60:
+            strata["70-80"].append(pr)
+        elif value <= p80:
+            strata["80-90"].append(pr)
+        else:
+            strata["90-100"].append(pr)    
+    return strata
 
 
 def get_lifespan_histogram(data):
@@ -697,13 +725,21 @@ files_names = {
 #     write_to_json_file(data, "longlived_"+ owner + "_" + repo + ".json")
     
 # HISTOGRAMS Individual fields
-for owner in files_names.keys():
-    repo = files_names[owner]
-    folder = "longest_15"
-    longlived_data = read_json_file(f"{folder}/longlived_{owner}_{repo}.json")
-    field = "total_user_comments"
-    get_field_histogram(longlived_data, field)
-    get_field_histogram_by_merge_status(longlived_data, field)
+# for owner in files_names.keys():
+#     repo = files_names[owner]
+#     folder = "longest_15"
+#     longlived_data = read_json_file(f"{folder}/longlived_{owner}_{repo}.json")
+#     field = "total_user_comments"
+#     get_field_histogram(longlived_data, field)
+#     get_field_histogram_by_merge_status(longlived_data, field)
+
+# STRATIFY BY LIFESPAN
+# for owner in files_names.keys():
+#     repo = files_names[owner]
+#     data = read_json_file(f"longest_50/longlived_{owner}_{repo}.json")
+#     prs = stratify_lifespans(data)
+#     write_to_json_file(prs, f"longest_50_stratified/stratified_{owner}_{repo}.json")
+
 
 # ANALYSIS
 # for owner in files_names.keys():
