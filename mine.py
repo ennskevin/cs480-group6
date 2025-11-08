@@ -7,6 +7,8 @@ from statistics import median
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from scipy.stats import mannwhitneyu
+
 # import matplotlib
 
 
@@ -496,13 +498,15 @@ def analyze_data(file):
     avg_merged = _compute_avg(merged)
     avg_closed = _compute_avg(closed)
 
-    factors = _get_factors(avg_merged, avg_closed),
+    factors = _get_factors(avg_merged, avg_closed)
+    ustats = get_u_stats(data)
 
     results = {
         "Overview" : overview,
         "Average metrics for merged PRs": avg_merged,
         "Average metrics for closed PRs": avg_closed,
-        "Factors (closed -> merged)" : factors
+        "Factors (closed -> merged)" : factors,
+        "U-Test (closed -> merged)" :  ustats
     }
 
     analysis_file = file.replace(".json", "_analysis.json")
@@ -566,15 +570,44 @@ def _get_factors (avg_merged, avg_closed):
 
     return factors
 
+def get_u_stats(data):
+    ustats = {}
+    numeric_fields = [
+        "commits",
+        "additions",
+        "deletions",
+        "changed_files",
+        "user_review_comments",
+        "user_conversation_comments",
+        "total_user_comments",
+        "unique_user_commenters"
+    ]    
+    for field in numeric_fields:
+        ustats[field] = u_test(data, field)
+    return ustats
+
+def u_test(data, field):
+    def is_valid(x):
+        return x is not None and not (isinstance(x, float) and math.isnan(x))
+
+    unmerged = [pr[field] for pr in data if not pr["merged"] and is_valid(pr[field])]
+    merged = [pr[field] for pr in data if pr["merged"] and is_valid(pr[field])]
+    
+    u_stat, p_value = mannwhitneyu(unmerged, merged, alternative="two-sided")
+    n1n2 = len(unmerged) * len(merged)
+    halfn1n2 = n1n2 / 2
+    cliffs_delta = ((2 * u_stat) / (n1n2)) - 1
+    return {"Cliff's Delta": cliffs_delta, "p value": p_value}
+
 
 def read_all_repos():
     repo_files = {
-        "zephyr": "longlived_zehpyr_analysis.json",
-        "curl": "longlived_curl_analysis.json",
+        "zephyr": "longlived_zephyrproject-rtos_zephyr_analysis.json",
+        "curl": "longlived_curl_curl_analysis.json",
         "facebook_react": "longlived_facebook_react_analysis.json",
-        "ohmyzhs": "longlived_ohmyzsh_analysis.json",
+        "ohmyzhs": "longlived_ohmyzsh_ohmyzsh_analysis.json",
         "twbs_boostrap": "longlived_twbs_bootstrap_analysis.json",
-        "vuejs": "longlived_vuejs_analysis.json"
+        "vuejs": "longlived_vuejs_core_analysis.json"
     }
 
     repo_analytics = []
@@ -591,7 +624,8 @@ def read_all_repos():
             "overview": data["Overview"],
             "merged_avg": data["Average metrics for merged PRs"],
             "closed_avg": data["Average metrics for closed PRs"],
-            "factors": data["Factors (closed -> merged)"][0]
+            "factors": data["Factors (closed -> merged)"][0],
+            "ustats": data["U-Test (closed -> merged)"][0]
         })
 
     return repo_analytics
@@ -704,7 +738,6 @@ def write_detailed_factor_csv(repo_analytics, filename="detailed_factors.csv"):
     print(f"Wrote detailed comparison to {filename}")
 
 
-
 files_names = {
     "curl": "curl",
     "zephyrproject-rtos": "zephyr",
@@ -743,7 +776,8 @@ files_names = {
 
 # ANALYSIS
 # for owner in files_names.keys():
-#     analyze_data("longlived_"+ owner + "_" + repo + ".json")
+#     repo = files_names[owner]
+#     analyze_data(f"longlived_{owner}_{repo}.json")
 
 
 
@@ -760,9 +794,9 @@ files_names = {
 
 # repo_analytics = read_all_repos()
 # write_overview_csv(repo_analytics)
-#write_detailed_merged_csv(repo_analytics)
-#write_detailed_closed_csv(repo_analytics)
-#write_detailed_factor_csv(repo_analytics)
+# write_detailed_merged_csv(repo_analytics)
+# write_detailed_closed_csv(repo_analytics)
+# write_detailed_factor_csv(repo_analytics)
 
 
 # make_histogram(data, median_time_delta)
