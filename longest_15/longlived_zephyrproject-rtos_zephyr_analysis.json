@@ -1,0 +1,73 @@
+{
+    "Overview": {
+        "merged_count": 5470,
+        "closed_count": 4770,
+        "total": 10242,
+        "merged_percent": 53.41,
+        "closed_percent": 46.57
+    },
+    "Average metrics for merged PRs": {
+        "commits": 3.41,
+        "additions": 1023.07,
+        "deletions": 118.19,
+        "changed_files": 13.84,
+        "user_review_comments": 11.87,
+        "user_conversation_comments": 7.07,
+        "total_user_comments": 18.94,
+        "unique_user_commenters": 3.87
+    },
+    "Average metrics for closed PRs": {
+        "commits": 7.66,
+        "additions": 2250.7,
+        "deletions": 1722.07,
+        "changed_files": 35.43,
+        "user_review_comments": 5.91,
+        "user_conversation_comments": 5.06,
+        "total_user_comments": 10.97,
+        "unique_user_commenters": 3.1
+    },
+    "Factors (closed -> merged)": {
+        "commits": 2.25,
+        "additions": 2.2,
+        "deletions": 14.57,
+        "changed_files": 2.56,
+        "user_review_comments": 0.5,
+        "user_conversation_comments": 0.72,
+        "total_user_comments": 0.58,
+        "unique_user_commenters": 0.8
+    },
+    "U-Test (closed -> merged)": {
+        "commits": {
+            "Cliff's Delta": -0.10563222239419157,
+            "p value": 8.410310921073164e-23
+        },
+        "additions": {
+            "Cliff's Delta": -0.11426281584685805,
+            "p value": 1.6607430568306083e-23
+        },
+        "deletions": {
+            "Cliff's Delta": -0.09692573681637706,
+            "p value": 1.2245948894332427e-17
+        },
+        "changed_files": {
+            "Cliff's Delta": -0.10495486314899072,
+            "p value": 2.2694409446066885e-20
+        },
+        "user_review_comments": {
+            "Cliff's Delta": -0.31093628126288175,
+            "p value": 1.4512590088402318e-169
+        },
+        "user_conversation_comments": {
+            "Cliff's Delta": -0.17524246403839583,
+            "p value": 1.964260340808559e-53
+        },
+        "total_user_comments": {
+            "Cliff's Delta": -0.29378174941883717,
+            "p value": 8.63699234530024e-146
+        },
+        "unique_user_commenters": {
+            "Cliff's Delta": -0.2035848589655378,
+            "p value": 2.664669485712137e-72
+        }
+    }
+}

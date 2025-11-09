@@ -26,16 +26,48 @@
         "total_user_comments": 6.68,
         "unique_user_commenters": 3.1
     },
-    "Factors (closed -> merged)": [
-        {
-            "commits": 2.15,
-            "additions": 1.67,
-            "deletions": 1.58,
-            "changed_files": 0.65,
-            "user_review_comments": 0.54,
-            "user_conversation_comments": 0.93,
-            "total_user_comments": 0.8,
-            "unique_user_commenters": 1.12
+    "Factors (closed -> merged)": {
+        "commits": 2.15,
+        "additions": 1.67,
+        "deletions": 1.58,
+        "changed_files": 0.65,
+        "user_review_comments": 0.54,
+        "user_conversation_comments": 0.93,
+        "total_user_comments": 0.8,
+        "unique_user_commenters": 1.12
+    },
+    "U-Test (closed -> merged)": {
+        "commits": {
+            "Cliff's Delta": -0.17546911166543067,
+            "p value": 4.369954381612212e-14
+        },
+        "additions": {
+            "Cliff's Delta": -0.03580230267346829,
+            "p value": 0.1383685827959025
+        },
+        "deletions": {
+            "Cliff's Delta": -0.13272582904484742,
+            "p value": 3.306580775937345e-08
+        },
+        "changed_files": {
+            "Cliff's Delta": -0.1157179562087538,
+            "p value": 5.440877004951093e-07
+        },
+        "user_review_comments": {
+            "Cliff's Delta": -0.1342007685565968,
+            "p value": 2.8582725843806648e-11
+        },
+        "user_conversation_comments": {
+            "Cliff's Delta": 0.06345011498385733,
+            "p value": 0.008330079646384396
+        },
+        "total_user_comments": {
+            "Cliff's Delta": -0.011857195292778067,
+            "p value": 0.6227231287652213
+        },
+        "unique_user_commenters": {
+            "Cliff's Delta": 0.09151366697378971,
+            "p value": 0.00012542301135704426
         }
-    ]
+    }
 }

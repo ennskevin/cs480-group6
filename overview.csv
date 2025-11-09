@@ -1,6 +1,6 @@
-metric,zephyr,curl,facebook_react,ohmyzhs,twbs_boostrap,vuejs
-merged_count,5470,27,586,182,978,337
-closed_count,4770,1894,2155,932,1365,454
-total,10242,1921,2741,1114,2343,791
-merged_percent,53.41,1.41,21.38,16.34,41.74,42.6
-closed_percent,46.57,98.59,78.62,83.66,58.26,57.4
+metric
+merged_count
+closed_count
+total
+merged_percent
+closed_percent

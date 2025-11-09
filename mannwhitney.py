@@ -1,8 +1,9 @@
 from scipy.stats import mannwhitneyu
 import json
+import math
 
 # use field to choose what feature to run the test on
-field = "commits"
+field = "user_review_comments"
 projects = {
     "curl": "curl",
     "zephyrproject-rtos": "zephyr",
@@ -21,16 +22,18 @@ def u_test(data, field):
     def is_valid(x):
         return x is not None and not (isinstance(x, float) and math.isnan(x))
 
-    merged = [pr[field] for pr in data if pr["merged"] and is_valid(pr[field])]
     unmerged = [pr[field] for pr in data if not pr["merged"] and is_valid(pr[field])]
+    merged = [pr[field] for pr in data if pr["merged"] and is_valid(pr[field])]
     
-    u_stat, p_value = mannwhitneyu(merged, unmerged, alternative="two-sided")
-    n1n2 = len(merged) * len(unmerged)
+    u_stat, p_value = mannwhitneyu(unmerged, merged, alternative="two-sided")
+    n1n2 = len(unmerged) * len(merged)
     halfn1n2 = n1n2 / 2
+    cliffs_delta = ((2 * u_stat) / (n1n2)) - 1
     print(f"n1 * n2 = {n1n2}")
     print(f"(n1 * n2) / 2 = {halfn1n2}")
     print(f"u-statistic: {u_stat}")
     print(f"p_value: {p_value}")
+    print(f"cliff's delta: {cliffs_delta}")
     print()
 
 
