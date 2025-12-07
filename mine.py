@@ -1,4 +1,5 @@
 import csv
+import warnings
 import os
 import requests
 import json
@@ -83,15 +84,13 @@ def move_through_prs(prs):
 
 def collect_and_write(token):
    files_names = {
-       # "curl": "curl",
-       "zephyrproject-rtos": "zephyr",
-       "JabRef": "jabref",
+       "zephyrproject-rtos": "zephyr"
    }
    for name in files_names.keys():
        data = get_all_pages(name, files_names[name], token)
        print(len(data))
        useful_data = move_through_prs(data)
-       file_name = name + ".json"
+       file_name = "all_prs.json"
        write_to_json_file(useful_data, file_name)
 
 
@@ -514,7 +513,7 @@ def analyze_data(file):
     with open(analysis_file, "w") as out_file:
         json.dump(results, out_file, indent=4)
 
-    print ("writintg to" + analysis_file)
+    print ("writing to" + analysis_file)
 
     return results
 
@@ -599,6 +598,47 @@ def u_test(data, field):
     cliffs_delta = ((2 * u_stat) / (n1n2)) - 1
     return {"Cliff's Delta": cliffs_delta, "p value": p_value}
 
+def plot(data, field, name):
+    merged, unmerged = stratify_merge_status(data)
+    A = [pr[field] for pr in unmerged]
+    B = [pr[field] for pr in merged]
+
+    plt.figure(figsize=(8, 6))
+    plt.boxplot(
+        [A, B],
+        labels=["Unmerged", "Merged"],
+        showmeans=True,
+        showfliers=False,
+        notch=True
+    )
+    plt.title(f"Distributions of {name}")
+    plt.ylabel(name)
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.savefig(f"{field}.png")
+
+def get_field(data, field):
+    returned = [[],[]]
+    for pr in data:
+        returned[0].append(pr["merged"])
+        returned[1].append(pr[field])
+    return returned
+
+def nbr(data, field):
+    print(f"{field}: NEGATIVE BINOMIAL REGRESSION")
+    a_and_b = get_field(data, field)
+    A = a_and_b[0]
+    B = a_and_b[1]
+
+    df = pd.DataFrame({"A": A, "B": B})
+    df["A"] = df["A"].astype(int)
+    X = sm.add_constant(df["A"])
+    model = sm.GLM(df["B"], X, family=sm.families.NegativeBinomial())
+    result = model.fit()
+    print(result.summary())
+
+    effect_size = np.exp(result.params["A"])
+    print("Rate ratio =", effect_size)
 
 def read_all_repos():
     repo_files = {
@@ -747,62 +787,38 @@ files_names = {
     "twbs": "bootstrap"
 }
 
-# MINING
-# for owner in files_names.keys():
-#     token = ""
-#     repo = files_names[owner]
-#     data = read_json_file(owner + ".json")
-#     percentile_value = get_percentile_time_delta(data, 50)
-#     data = get_long_lived_prs_without_separating(data, percentile_value)
-#     enhance_pr_data(data, owner, repo, token)
-#     write_to_json_file(data, "longlived_"+ owner + "_" + repo + ".json")
+token = os.getenv("GITHUB_TOKEN")
+owner = "zephyrproject-rtos"
+repo = "zephyr"
+
+# MINE
+collect_and_write(token)
+data = read_json_file("all_prs.json")
+percentile_value = get_percentile_time_delta(data, 85)
+data = get_long_lived_prs_without_separating(data, percentile_value)
+enhance_pr_data(data, owner, repo, token)
+write_to_json_file(data, "longlived_prs.json")
     
-# HISTOGRAMS Individual fields
-# for owner in files_names.keys():
-#     repo = files_names[owner]
-#     folder = "longest_15"
-#     longlived_data = read_json_file(f"{folder}/longlived_{owner}_{repo}.json")
-#     field = "total_user_comments"
-#     get_field_histogram(longlived_data, field)
-#     get_field_histogram_by_merge_status(longlived_data, field)
-
-# STRATIFY BY LIFESPAN
-# for owner in files_names.keys():
-#     repo = files_names[owner]
-#     data = read_json_file(f"longest_50/longlived_{owner}_{repo}.json")
-#     prs = stratify_lifespans(data)
-#     write_to_json_file(prs, f"longest_50_stratified/stratified_{owner}_{repo}.json")
+# PLOT
+dependent_variables = {
+    "commits": "Commits",
+    "additions": "Additions",
+    "deletions": "Deletions",
+    "changed_files": "Changed Files",
+    "user_review_comments": "Review Comments",
+    "user_conversation_comments": "Conversation Comments",
+    "total_user_comments": "All Comments",
+    "unique_user_commenters": "Unique Commenters"
+}
+for field in dependent_variables:
+    plot(data, field, dependent_variables[field])
 
 
-# ANALYSIS
-# for owner in files_names.keys():
-#     repo = files_names[owner]
-#     analyze_data(f"longlived_{owner}_{repo}.json")
-
-
-
-
-# collect_and_write(token)
-#data = read_json_file("zephyrproject-rtos.json")
-#data = get_first_x_of_data(500, owner + ".json")
-#median_time_delta = get_median_time_delta(data)
-#percentile_value = get_percentile_time_delta(data, 85)
-#data = get_long_lived_prs_without_separating(data, percentile_value)
-#enhance_pr_data(data, owner, repro, token)
-#write_to_json_file(data, "longlived_zehpyr_prs.json")
-#analyze_data("longlived_vuejs.json")
-
-# repo_analytics = read_all_repos()
-# write_overview_csv(repo_analytics)
-# write_detailed_merged_csv(repo_analytics)
-# write_detailed_closed_csv(repo_analytics)
-# write_detailed_factor_csv(repo_analytics)
-
-
-# make_histogram(data, median_time_delta)
-# closed_pr_numbers, merged_pr_numbers = get_long_lived_prs(data, median_time_delta)
-
-# collect_and_write_each_pr(owner, repro, token, closed_pr_numbers, merged_pr_numbers)
-# print(len(closed_pr_numbers))
-# print(len(merged_pr_numbers))
-# print(merged_pr_numbers[44])
+# ANALYZE
+analyze_data("longlived_prs.json")
+warnings.filterwarnings("ignore", category=UserWarning)
+data = read_json_file("longest_15/longlived_zephyrproject-rtos_zephyr.json")
+for field in dependent_variables:
+    print()
+    nbr(data, field)
+    print()
