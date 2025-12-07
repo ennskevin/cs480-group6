@@ -1,5 +1,11 @@
 # cs480-group6
+This package provides the dataset used, as well as the script to replicate both datamining and data analysis
 
+## DATASETS
+/all_prs.json -- basic descriptors of all closed pull requests from the zephyrproject-rtos/zephyr Github repository. All prs are fetched so as to be able to calculate lifespan statistics
+/longlived_prs.json -- this is the final dataset used in analysis. This is a subset of all_prs, specifically every pull request above the 85th percentile lifespan. This data has also been enriched.
+
+## REPLICATION
 mine.py consists of three workflows, each of which can be found at the bottom of the script.
 
 ### MINE
