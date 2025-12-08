@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from scipy.stats import mannwhitneyu
+import pandas as pd
+import statsmodels.api as sm
 
 # import matplotlib
 
@@ -776,16 +778,7 @@ def write_detailed_factor_csv(repo_analytics, filename="detailed_factors.csv"):
         writer.writerows(rows)
 
     print(f"Wrote detailed comparison to {filename}")
-
-
-files_names = {
-    "curl": "curl",
-    "zephyrproject-rtos": "zephyr",
-    "vuejs": "core",
-    "facebook":"react",
-    "ohmyzsh": "ohmyzsh",
-    "twbs": "bootstrap"
-}
+    
 
 token = os.getenv("GITHUB_TOKEN")
 owner = "zephyrproject-rtos"
